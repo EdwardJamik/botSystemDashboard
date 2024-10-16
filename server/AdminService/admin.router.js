@@ -6,6 +6,7 @@ const TelegramUsers = require("../models/user.model")
 const Sending = require("../models/sending.model")
 const BotsList = require("../models/bot.model")
 const BotsGroup = require("../models/group.model")
+const BotHashTags = require("../models/hashtag.model")
 
 const auth = require("./Middlewares/auth.js");
 const dayjs = require("dayjs");
@@ -604,14 +605,14 @@ router.post("/getBotData",  async (req, res) => {
 
                 for(const currentGroup of botGroup){
                     if(currentGroup?.working){
-                        groupFind.push({_id:currentGroup?._id,name:currentGroup?.name, working:true})
+                        groupFind.push({_id:currentGroup?._id, chat_id: currentGroup?.chat_id, name:currentGroup?.name, working:true})
                     } else {
                         const botGroup = await BotsGroup.findOne({chat_id: currentGroup?.chat_id, working:true})
 
                         if(botGroup)
-                            groupFind.push({_id:currentGroup?._id,name:currentGroup?.name, working:true})
+                            groupFind.push({_id:currentGroup?._id, chat_id: currentGroup?.chat_id, name:currentGroup?.name, working:true})
                         else
-                            groupFind.push({_id:currentGroup?._id,name:currentGroup?.name, working:false})
+                            groupFind.push({_id:currentGroup?._id, chat_id: currentGroup?.chat_id, name:currentGroup?.name, working:false})
                     }
                 }
 
@@ -631,6 +632,326 @@ router.post("/getBotData",  async (req, res) => {
 });
 
 
+router.post("/getGroupTags",  async (req, res) => {
+    try {
+        const { id } = req.body;
+        const Bot = require('../bot/bot');
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(id !== null && id){
+            try{
+
+                const botGroup = await BotsGroup.findOne({_id: id})
+                const pipeline = [
+                    {
+                        $match:{
+                            thread_id: botGroup?.thread_id,
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: "$hashtag",
+                            count: { $sum: 1 },
+                            originalId: { $first: "$_id" }, // Зберігаємо оригінальний _id
+                            hashtag: { $first: "$hashtag" },
+                            chat_id: { $first: "$chat_id" },
+                            chat_id_bot: { $first: "$chat_id_bot" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: "$originalId", // Використовуємо оригінальний _id як _id
+                            hashtag: "$_id", // Використовуємо попередній _id (хештег) як hashtag
+                            chat_id: 1,
+                            chat_id_bot: 1,
+                            count: 1
+                        }
+                    }
+                ];
+
+
+                const botHashTags = await BotHashTags.aggregate(pipeline);
+
+                res.json({status: true, hashTags: botHashTags});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
+router.post("/deleteHashtag",  async (req, res) => {
+    try {
+        const { group_id,chat_id,hashTag,activeKey } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(chat_id !== null && chat_id && hashTag !== null && hashTag){
+            try{
+                const botGroupCurrent = await BotsGroup.findOne({_id: activeKey})
+                await BotHashTags.deleteMany({hashtag:hashTag,chat_id:group_id, thread_id: botGroupCurrent?.thread_id, chat_id_bot: botGroupCurrent?.chat_id_bot});
+
+                const botData = await BotsList.findOne({chat_id: chat_id});
+                const botGroup = await BotsGroup.find({chat_id: group_id})
+
+                const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+
+                if(activeKey === 'all'){
+                    const pipeline = [
+                        {
+                            $group: {
+                                _id: "$hashtag",
+                                count: { $sum: 1 },
+                                originalId: { $first: "$_id" }, // Зберігаємо оригінальний _id
+                                hashtag: { $first: "$hashtag" },
+                                chat_id: { $first: "$chat_id" },
+                                chat_id_bot: { $first: "$chat_id_bot" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: "$originalId", // Використовуємо оригінальний _id як _id
+                                hashtag: "$_id", // Використовуємо попередній _id (хештег) як hashtag
+                                chat_id: 1,
+                                chat_id_bot: 1,
+                                count: 1
+                            }
+                        }
+                    ];
+
+                    const botHashTags = await BotHashTags.aggregate(pipeline);
+
+                    res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHashTags});
+                } else {
+                    const pipeline = [
+                        {
+                            $match:{
+                                thread_id: botGroupCurrent?.thread_id,
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: "$hashtag",
+                                count: { $sum: 1 },
+                                originalId: { $first: "$_id" }, // Зберігаємо оригінальний _id
+                                hashtag: { $first: "$hashtag" },
+                                chat_id: { $first: "$chat_id" },
+                                chat_id_bot: { $first: "$chat_id_bot" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: "$originalId", // Використовуємо оригінальний _id як _id
+                                hashtag: "$_id", // Використовуємо попередній _id (хештег) як hashtag
+                                chat_id: 1,
+                                chat_id_bot: 1,
+                                count: 1
+                            }
+                        }
+                    ];
+
+                    const botHashTags = await BotHashTags.aggregate(pipeline);
+
+
+                    const pipelineAll = [
+                        {
+                            $group: {
+                                _id: "$hashtag",
+                                count: { $sum: 1 },
+                                originalId: { $first: "$_id" }, // Зберігаємо оригінальний _id
+                                hashtag: { $first: "$hashtag" },
+                                chat_id: { $first: "$chat_id" },
+                                chat_id_bot: { $first: "$chat_id_bot" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: "$originalId", // Використовуємо оригінальний _id як _id
+                                hashtag: "$_id", // Використовуємо попередній _id (хештег) як hashtag
+                                chat_id: 1,
+                                chat_id_bot: 1,
+                                count: 1
+                            }
+                        }
+                    ];
+
+                    const botAllHashTags = await BotHashTags.aggregate(pipelineAll);
+
+                    res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHashTags, allHashTags: botAllHashTags});
+                }
+
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
+router.post("/getHashData",  async (req, res) => {
+    try {
+        const { bot_id, group_id, hash_id } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(bot_id !== null && bot_id && group_id !== null && group_id){
+            try{
+                const botHash = await BotHashTags.findOne({_id: hash_id})
+                const botData = await BotsList.findOne({_id:bot_id});
+                const botGroup = await BotsGroup.find({chat_id: group_id})
+                const botCurrent = await BotsList.findOne({_id:bot_id});
+                const botHashData = await BotHashTags.find({chat_id: group_id, chat_id_bot: String(botCurrent?.chat_id), hashtag: botHash?.hashtag})
+                const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+
+                res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHash, hashTagData:botHashData});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
+router.post("/getGroupData",  async (req, res) => {
+    try {
+        const { group_id,bot_id } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(bot_id !== null && bot_id && group_id !== null && group_id){
+            try{
+                const botData = await BotsList.findOne({_id:bot_id});
+                const botGroup = await BotsGroup.find({chat_id: group_id})
+
+                const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+
+                const pipeline = [
+                    {
+                        $group: {
+                            _id: "$hashtag",
+                            count: { $sum: 1 },
+                            originalId: { $first: "$_id" }, // Зберігаємо оригінальний _id
+                            hashtag: { $first: "$hashtag" },
+                            chat_id: { $first: "$chat_id" },
+                            chat_id_bot: { $first: "$chat_id_bot" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: "$originalId", // Використовуємо оригінальний _id як _id
+                            hashtag: "$_id", // Використовуємо попередній _id (хештег) як hashtag
+                            chat_id: 1,
+                            chat_id_bot: 1,
+                            count: 1
+                        }
+                    }
+                ];
+
+                const botHashTags = await BotHashTags.aggregate(pipeline);
+
+                res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHashTags});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
+router.post("/disabledParse",  async (req, res) => {
+    try {
+        const { id, chat_id } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(id !== null && id){
+            try{
+                const botGroup = await BotsGroup.findOne({chat_id: chat_id, thread_id:id})
+                const botGroupList = await BotsGroup.find({chat_id: chat_id})
+
+                if(botGroup?.working){
+                    await BotsGroup.updateOne({chat_id: chat_id, thread_id:id}, {working: false})
+                    res.json({status: true, botGroup: botGroupList});
+                } else {
+                    await BotsGroup.updateOne({chat_id: chat_id, thread_id:id}, {working: true})
+                    res.json({status: true, botGroup: botGroupList});
+                }
+                // const botData = await BotsList.findOne({_id:bot_id});
+                // const botGroup = await BotsGroup.find({chat_id: group_id})
+                //
+                // const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+                //
+                // res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHashTags});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
 router.post("/reloadBot",  async (req, res) => {
     try {
         const { id } = req.body;
@@ -648,8 +969,14 @@ router.post("/reloadBot",  async (req, res) => {
             try{
                 const botData = await BotsList.findOne({_id:id});
 
-                const bot = new Bot(botData?.token);
-                await bot.stopBot();
+                if(!botData?.status){
+                    const bot = new Bot(botData?.token);
+                    bot.launch();
+                } else {
+                    const bot = new Bot(botData?.token);
+                    await bot.stopBot();
+                }
+
 
                 res.json({status: true, botData: botData});
             } catch (e){
@@ -667,6 +994,43 @@ router.post("/reloadBot",  async (req, res) => {
 });
 
 
+router.post("/removeBot",  async (req, res) => {
+    try {
+        const { id } = req.body;
+        const Bot = require('../bot/bot');
 
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(id !== null && id){
+            try {
+                const botData = await BotsList.findOne({_id: id});
+
+                const bot = new Bot(botData?.token);
+                await bot.stopBot();
+
+                await BotsList.deleteOne({_id: id})
+                await BotsGroup.deleteMany({chat_id_bot: botData?.chat_id})
+                await BotHashTags.deleteMany({chat_id_bot: botData?.chat_id})
+
+                res.json({status: true});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
 
 module.exports = router;

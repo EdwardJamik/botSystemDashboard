@@ -1,15 +1,17 @@
 import React, {useEffect, useState} from 'react';
 import {Breadcrumb, Button, Col, ConfigProvider, Row, Statistic, Table, Tag} from "antd";
-import {HomeOutlined, RobotOutlined, UserOutlined} from "@ant-design/icons";
+import {HomeOutlined, RobotOutlined} from "@ant-design/icons";
 import {useLocation} from "react-router-dom";
 import axios from "axios";
 import {url} from "../../Config.jsx";
+import { useNavigate } from 'react-router-dom';
 
 const BotPage = () => {
 
     const [isBotData, setBotData] = useState()
     const [isBotGroup, setBotGroup] = useState()
     const location = useLocation();
+    const navigate = useNavigate();
 
     const getBotData = async (id) => {
         const {data} = await axios.post(
@@ -29,6 +31,15 @@ const BotPage = () => {
         setBotGroup(data?.botGroup)
     }
 
+    const removeBot = async (id) => {
+        const {data} = await axios.post(
+            `${url}/api/v1/admin/removeBot`, {id}, {withCredentials: true}
+        );
+
+        if(data?.status){
+            navigate('/');
+        }
+    }
 
     const columns = [
         {
@@ -55,11 +66,10 @@ const BotPage = () => {
         },
         {
             title: '',
-            dataIndex: '_id',
+            dataIndex: 'chat_id',
             width: '20%',
-            render: (_id) => <>
-                <Button>Статистика</Button>
-
+            render: (chat_id) => <>
+                <Button href={`/bot/${isBotData?._id}/${chat_id}`}>Статистика</Button>
             </>,
         },
     ];
@@ -85,7 +95,7 @@ const BotPage = () => {
                         title: (
                             <>
                                 <RobotOutlined />
-                                <span>Bot {isBotData?.name} ({isBotData?.first_name})</span>
+                                <span>{isBotData?.status ? '🟢' : '🔴' }<span style={{fontWeight:800, fontSize:'12px'}}>Bot</span> {isBotData?.name} ({isBotData?.first_name})</span>
                             </>
                         ),
                     }
@@ -102,6 +112,7 @@ const BotPage = () => {
                             },
                         }}
                     >
+                        <Statistic title="Status" value={`${isBotData?.status ? '🟢' : '🔴' }`} />
                         <Statistic title="First name" value={`${isBotData?.first_name}`} />
                         <Statistic style={{marginTop:'14px'}} title="Username" value={`@${isBotData?.username}`} />
                     </ConfigProvider>
@@ -137,20 +148,11 @@ const BotPage = () => {
                             marginTop: 16,
                             marginRight: 10
                         }}
-                        variant="outlined"
-                    >
-                        Редагувати
-                    </Button>
-                    <Button
-                        style={{
-                            marginTop: 16,
-                            marginRight: 10
-                        }}
                         onClick={()=>reloadBot(isBotData?._id)}
                         type="primary"
                     >
+                        {isBotData?.status ? 'Зупинити' : 'Ввімкнути'}
 
-                        Зупинити
                     </Button>
                     <Button
                         style={{
@@ -158,6 +160,7 @@ const BotPage = () => {
                         }}
                         type='primary'
                         danger
+                        onClick={()=>removeBot(isBotData?._id)}
                     >
                         Видалити
                     </Button>

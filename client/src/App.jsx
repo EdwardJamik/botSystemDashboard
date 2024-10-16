@@ -10,6 +10,8 @@ import {ProtectedRoute} from "./ProtectedRoute.jsx";
 
 import Sending from "./pages/Sending/Sending.jsx";
 import BotPage from "./pages/BotPage/BotPage.jsx";
+import GroupPage from "./pages/GroupPage/GroupPage.jsx";
+import HashTagsPage from "./pages/HashTagUsers/HashTagsPage.jsx";
 
 function App() {
     const routes = [
@@ -24,6 +26,14 @@ function App() {
         {
             link: '/bot/:id',
             element: <ProtectedRoute element={<Main><BotPage/></Main>}/>,
+        },
+        {
+            link: '/bot/:id/:chat_id',
+            element: <ProtectedRoute element={<Main><GroupPage/></Main>}/>,
+        },
+        {
+            link: '/bot/:id/:chat_id/:hash_id',
+            element: <ProtectedRoute element={<Main><HashTagsPage/></Main>}/>,
         },
         {
             link: '/usersending',

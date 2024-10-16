@@ -46,6 +46,7 @@ class Bot {
                     username: this.username,
                     first_name: this.first_name,
                     active: true,
+                    status:true
                 }
             );
 
@@ -58,7 +59,7 @@ class Bot {
 
     async handleStart(ctx) {
         try {
-
+            console.log('START')
             return false
         } catch (e) {
             console.error(e);
@@ -69,9 +70,9 @@ class Bot {
         try {
 
             if(ctx?.update?.message || ctx?.update?.my_chat_member){
-                const {status} = await BotModel.findOne({chat_id: ctx?.update?.message?.chat?.id})
-                console.log(status)
-                if(!status) return false
+                const checkStatus = await BotModel.findOne({chat_id: this.id})
+
+                if(!checkStatus?.status) return false
 
                 if(ctx?.update?.message?.left_chat_member?.id === this.id){
 
@@ -230,16 +231,10 @@ class Bot {
 
     async stopBot() {
         try {
-            // console.log(this.token)
-            // console.log(this.bot.)
-            // console.log(this.bot.stop())
-                await this.bot.stop();
-                // process.once('SIGINT', () => this.bot.stop('SIGINT'));
-                // process.once('SIGTERM', () => this.bot.stop('SIGTERM'));
                 console.log(`Бот з токеном ${this.token.slice(0, 10)}... успішно зупинений.`);
                 await BotModel.updateOne(
                     {token: this.token},
-                    {active: false}
+                    {active: false,status:false}
                 );
 
         } catch (error) {
@@ -268,6 +263,7 @@ class Bot {
                 { token: this.token },
                 {
                     active: true,
+                    status: true
                 }
             );
         } catch (error) {

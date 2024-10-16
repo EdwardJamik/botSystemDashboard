@@ -96,19 +96,6 @@ function Sidenav() {
               <span className="label">Боти</span>
             </NavLink>
           </Menu.Item>
-          <Menu.Item key="12">
-            <NavLink to="/usersending">
-            <span
-                className="icon"
-                style={{
-                  background: page === "sending" ? '#231F20d9' : "",
-                }}
-            >
-              {sendingIcon}
-            </span>
-              <span className="label">Розсилка</span>
-            </NavLink>
-          </Menu.Item>
           <Menu.Item key="15">
             <NavLink onClick={Logout} to="/sign-in">
             <span
