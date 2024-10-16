@@ -1,10 +1,12 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Breadcrumb, Button, Col, ConfigProvider, Input, Row, Statistic, Table} from "antd";
 import {DeleteOutlined, HomeOutlined, RobotOutlined, SearchOutlined, UserOutlined} from "@ant-design/icons";
 import {useLocation} from "react-router-dom";
 import axios from "axios";
 import {url} from "../../Config.jsx";
 import { useNavigate } from 'react-router-dom';
+import { formatInTimeZone } from 'date-fns-tz';
+import { parseISO } from 'date-fns';
 
 const BotPage = () => {
 
@@ -79,9 +81,14 @@ const BotPage = () => {
             title: 'Час',
             dataIndex: 'createdAt',
             width: '25%',
-            align:'center',
-            sorter: (a, b) => a.count - b.count,
+            align: 'center',
+            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
             defaultSortOrder: 'descend',
+            render: (text) => {
+                const date = parseISO(text);
+                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                return formatInTimeZone(date, userTimeZone, 'dd.MM.yyyy HH:mm:ss');
+            },
         },
         {
             title: '',
@@ -89,7 +96,7 @@ const BotPage = () => {
             width: '25%',
             align:'center',
             render: (_, record) => <>
-                <Button onClick={()=>removeHashTagItem(record?.chat_id,record?.chat_id_bot,record?.hashtag)} style={{fontSize:'12px'}} danger><DeleteOutlined /></Button>
+                <Button onClick={()=>removeHashTagItem(record?._id)} style={{fontSize:'12px'}} danger><DeleteOutlined /></Button>
             </>,
         },
     ];
@@ -114,14 +121,26 @@ const BotPage = () => {
         setHashTags(data?.hashTags)
     }
 
-    const removeHashTagItem = async (group_id, chat_id, hashTag) => {
+    const removeHashTagItem = async (hashTagId) => {
+
+        const pathname = location.pathname;
+        const parts = pathname.split('/');
+        const botId = parts[parts.length - 3];
+        const chatId = parts[parts.length - 2];
+        const hashId = parts[parts.length - 1];
+
+        const removeTags = await axios.post(
+            `${url}/api/v1/admin/deleteUserHashTag`, {hashTagId}, {withCredentials: true}
+        );
+
         const {data} = await axios.post(
-            `${url}/api/v1/admin/deleteHashtag`, {group_id,chat_id,hashTag}, {withCredentials: true}
+            `${url}/api/v1/admin/getHashData`, {bot_id:botId, group_id:chatId, hash_id:hashId}, {withCredentials: true}
         );
 
         setBotData(data?.botData)
-        setBotGroup(data?.botGroup)
+        setBotGroup(data?.hashTagData)
         setGroupMain(data?.groupMain)
+        setHashTags(data?.hashTags)
     }
 
     useEffect(() => {
@@ -192,7 +211,7 @@ const BotPage = () => {
                             },
                         }}
                     >
-                        <Statistic title="Title" value={`${isHashTags?.hashtag}`} />
+                        <Statistic title="Hashtag" value={`${isHashTags?.hashtag}`} />
                     </ConfigProvider>
                 </Col>
                 <Col span={24}>

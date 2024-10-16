@@ -908,6 +908,73 @@ router.post("/getGroupData",  async (req, res) => {
     }
 });
 
+router.post("/stopedParsedGroup",  async (req, res) => {
+    try {
+        const { chat_id } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(chat_id !== null && chat_id){
+            try{
+                const botGroupInfo = await BotsGroup.findOne({chat_id: chat_id, thread_id:'main'})
+
+                const botGroup = await BotsGroup.updateMany({chat_id: chat_id}, {working:!botGroupInfo?.working})
+
+                res.json({status: true});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
+router.post("/removeGroup",  async (req, res) => {
+    try {
+        const { chat_id } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(chat_id !== null && chat_id){
+            try{
+                const botGroupInfo = await BotsGroup.findOne({chat_id: chat_id, thread_id:'main'})
+
+                const botGroup = await BotsGroup.deleteMany({chat_id: chat_id})
+                const botGroupHashTags = await BotHashTags.deleteMany({chat_id: chat_id})
+                
+                res.json({status: true});
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
 router.post("/disabledParse",  async (req, res) => {
     try {
         const { id, chat_id } = req.body;
@@ -952,6 +1019,38 @@ router.post("/disabledParse",  async (req, res) => {
     }
 });
 
+router.post("/deleteUserHashTag",  async (req, res) => {
+    try {
+        const { hashTagId } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(hashTagId !== null && hashTagId){
+            try{
+
+                    await BotHashTags.deleteOne({_id: hashTagId})
+                    res.json({status: true});
+
+
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
 router.post("/reloadBot",  async (req, res) => {
     try {
         const { id } = req.body;

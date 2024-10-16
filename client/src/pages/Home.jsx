@@ -92,7 +92,7 @@ export default function Home() {
             width: '10%',
             render: (_, { active, status }) => (
                 <>
-                    {active && status ?
+                    {status ?
                         <Tag bordered={false} color="success">
                             TRUE
                         </Tag>

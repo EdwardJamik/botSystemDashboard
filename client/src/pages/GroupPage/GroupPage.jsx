@@ -174,18 +174,29 @@ const BotPage = () => {
 
     }
 
-    const reloadBot = async (id) => {
+    const stopedPars = async (chat_id) => {
+        const changeStatus = await axios.post(
+            `${url}/api/v1/admin/stopedParsedGroup`, {chat_id}, {withCredentials: true}
+        );
+
+        const pathname = location.pathname;
+        const parts = pathname.split('/');
+        const botId = parts[parts.length - 2];
+        const chatId = parts[parts.length - 1];
         const {data} = await axios.post(
-            `${url}/api/v1/admin/reloadBot`, {id}, {withCredentials: true}
+            `${url}/api/v1/admin/getGroupData`, {group_id:chatId,bot_id:botId}, {withCredentials: true}
         );
 
         setBotData(data?.botData)
         setBotGroup(data?.botGroup)
+        setGroupMain(data?.groupMain)
+        setHashTags(data?.hashTags)
+        setAllHash(data?.hashTags)
     }
 
-    const removeBot = async (id) => {
+    const removeGroup = async (id) => {
         const {data} = await axios.post(
-            `${url}/api/v1/admin/removeBot`, {id}, {withCredentials: true}
+            `${url}/api/v1/admin/removeGroup`, {chat_id:id}, {withCredentials: true}
         );
 
         if(data?.status){
@@ -261,10 +272,10 @@ const BotPage = () => {
                             marginTop: 16,
                             marginRight: 10
                         }}
-                        onClick={()=>reloadBot(isBotData?._id)}
+                        onClick={()=>stopedPars(isGroupMain?.chat_id)}
                         type="primary"
                     >
-                        {isBotData?.status ? 'Зупинити парсинг' : 'Ввімкнути'}
+                        {isGroupMain?.working ? 'Зупинити парсинг' : 'Ввімкнути'}
 
                     </Button>
                     <Button
@@ -273,7 +284,7 @@ const BotPage = () => {
                         }}
                         type='primary'
                         danger
-                        onClick={()=>removeBot(isBotData?._id)}
+                        onClick={()=> removeGroup(isGroupMain?.chat_id)}
                     >
                         Видалити
                     </Button>
