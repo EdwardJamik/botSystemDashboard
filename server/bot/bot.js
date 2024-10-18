@@ -250,7 +250,7 @@ class Bot {
 
             if (message && image !== null && image?.length && image !== '') {
                 if (image?.length === 1) {
-                    const photoPath = `./uploads/sending/${image[0]}`;
+                    const photoPath = `https://bot.chatbotique.com.ua/sending-images/${image[0]}`;
 
                     try {
                         await this.bot.telegram.sendPhoto(chat_id, { source: fs.createReadStream(photoPath) }, {
@@ -264,7 +264,7 @@ class Bot {
                 } else {
                     const media = image.map((photoPath) => ({
                         type: 'photo',
-                        media: { source: fs.createReadStream(`./uploads/sending/${photoPath}`) },
+                        media: `https://bot.chatbotique.com.ua/sending-images/${photoPath}`,
                     }));
 
                     try {
@@ -283,7 +283,7 @@ class Bot {
                 }
             } else if (message && video !== null && video?.length && video !== '') {
                 if (video?.length === 1) {
-                    const videoPath = `./uploads/sending/${video}`;
+                    const videoPath = `https://bot.chatbotique.com.ua/sending-images/${video}`;
                     try {
 
                         await this.bot.telegram.sendVideo(chat_id, { source: fs.createReadStream(videoPath) }, {
@@ -297,7 +297,7 @@ class Bot {
                 } else {
                     const media = video.map((videoPath, index) => ({
                         type: 'video',
-                        media: { source: fs.createReadStream(`./uploads/sending/${videoPath}`) },
+                        media: `https://bot.chatbotique.com.ua/sending-images/${videoPath}`,
                         ...(index === 1 ? {caption: message} : {}),
                     }));
 
