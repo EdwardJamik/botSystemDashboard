@@ -832,7 +832,53 @@ router.post("/getHashData",  async (req, res) => {
                 const botData = await BotsList.findOne({_id:bot_id});
                 const botGroup = await BotsGroup.find({chat_id: group_id})
                 const botCurrent = await BotsList.findOne({_id:bot_id});
-                const botHashData = await BotHashTags.find({chat_id: group_id, chat_id_bot: String(botCurrent?.chat_id), hashtag: botHash?.hashtag})
+
+                const pipeline = [
+                    {
+                        $match: {
+                            chat_id: group_id,
+                            chat_id_bot: String(botCurrent?.chat_id),
+                            hashtag: botHash?.hashtag,
+                            thread_id: botHash?.thread_id
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                thread_id: "$thread_id",
+                                hashtag: "$hashtag"
+                            },
+                            count: { $sum: 1 },
+                            chat_id: { $first: "$chat_id" },
+                            chat_id_bot: { $first: "$chat_id_bot" },
+                            chat_id_user: { $first: "$chat_id_user" },
+                            first_name: { $first: "$first_name" },
+                            createdAt: { $min: "$createdAt" },
+                            updatedAt: { $max: "$updatedAt" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            thread_id: "$_id.thread_id",
+                            hashtag: "$_id.hashtag",
+                            count: 1,
+                            chat_id: 1,
+                            chat_id_bot: 1,
+                            chat_id_user: 1,
+                            username: 1,
+                            first_name: 1,
+                            createdAt: 1,
+                            updatedAt: 1
+                        }
+                    },
+                    {
+                        $sort: { thread_id: 1, count: -1 }
+                    }
+                ];
+
+                const botHashData = await BotHashTags.aggregate(pipeline)
+                // console.log(botHashData)
                 const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
 
                 res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHash, hashTagData:botHashData});
@@ -959,7 +1005,7 @@ router.post("/removeGroup",  async (req, res) => {
 
                 const botGroup = await BotsGroup.deleteMany({chat_id: chat_id})
                 const botGroupHashTags = await BotHashTags.deleteMany({chat_id: chat_id})
-                
+
                 res.json({status: true});
             } catch (e){
                 console.error(e)
@@ -1021,7 +1067,7 @@ router.post("/disabledParse",  async (req, res) => {
 
 router.post("/deleteUserHashTag",  async (req, res) => {
     try {
-        const { hashTagId } = req.body;
+        const { group_id, hash_id } = req.body;
 
         const user_token = req.cookies.token;
         if (!user_token) return res.json(false);
@@ -1031,11 +1077,16 @@ router.post("/deleteUserHashTag",  async (req, res) => {
 
         if(!admin) return res.json(false);
 
-        if(hashTagId !== null && hashTagId){
-            try{
+        if(group_id !== null && group_id && hash_id !== null && hash_id){
+            try {
 
-                    await BotHashTags.deleteOne({_id: hashTagId})
-                    res.json({status: true});
+                const findHashName = await BotHashTags.findOne({_id: hash_id})
+                await BotHashTags.deleteMany({
+                    chat_id: group_id,
+                    chat_id_user: findHashName?.chat_id_user,
+                    hashtag: findHashName?.hashtag
+                })
+                res.json({status: true});
 
 
             } catch (e){

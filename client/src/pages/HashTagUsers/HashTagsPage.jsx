@@ -78,6 +78,14 @@ const BotPage = () => {
             ),
         },
         {
+            title: 'Кількість',
+            dataIndex: 'count',
+            width: '25%',
+            align: 'center',
+            sorter: (a, b) => a.count - b.count,
+            defaultSortOrder: 'descend',
+        },
+        {
             title: 'Час',
             dataIndex: 'createdAt',
             width: '25%',
@@ -130,7 +138,7 @@ const BotPage = () => {
         const hashId = parts[parts.length - 1];
 
         const removeTags = await axios.post(
-            `${url}/api/v1/admin/deleteUserHashTag`, {hashTagId}, {withCredentials: true}
+            `${url}/api/v1/admin/deleteUserHashTag`, {group_id: chatId, hash_id: hashId}, {withCredentials: true}
         );
 
         const {data} = await axios.post(
