@@ -25,7 +25,11 @@ const supportFolder = path.join(__dirname, 'uploads/support/downloads');
 
 app.use('/qr', express.static(qrFolder));
 app.use('/images', express.static(imagesFolder));
-app.use('/sending-images', express.static(sendingFolderOutput));
+app.use('/sending-images', express.static(sendingFolderOutput, {
+    index: false, // Відключає індексацію файлів у директорії
+    dotfiles: 'deny', // Блокує доступ до прихованих файлів
+    maxAge: '1d' // Налаштування кешування
+}));
 app.use('/video', express.static(videoFolder));
 app.use('/sending', express.static(sendingFolder));
 app.use('/supports', express.static(supportFolder));

@@ -250,7 +250,7 @@ class Bot {
 
             if (message && image !== null && image?.length && image !== '') {
                 if (image?.length === 1) {
-                    const photoPath = `https://bot.chatbotique.com.ua/sending-images/${image[0]}`;
+                    const photoPath = `./uploads/sending/${image[0]}`;
 
                     try {
                         await this.bot.telegram.sendPhoto(chat_id, { source: fs.createReadStream(photoPath) }, {
@@ -264,7 +264,7 @@ class Bot {
                 } else {
                     const media = image.map((photoPath) => ({
                         type: 'photo',
-                        media: `https://bot.chatbotique.com.ua/sending-images/${photoPath}`,
+                        media: { source: fs.createReadStream(`./uploads/sending/${photoPath}`) },
                     }));
 
                     try {
@@ -283,10 +283,9 @@ class Bot {
                 }
             } else if (message && video !== null && video?.length && video !== '') {
                 if (video?.length === 1) {
-                    const videoPath = `https://bot.chatbotique.com.ua/sending-images/${video}`;
+                    const videoPath = `./uploads/sending/${video}`;
                     try {
-
-                        await this.bot.telegram.sendVideo(chat_id, { source: fs.createReadStream(videoPath) }, {
+                        await this.bot.telegram.sendVideo(chat_id, 'https://bot.chatbotique.com.ua/sending-images/1729270305100-62006573.mp4', {
                             caption: message,
                             parse_mode: 'Markdown',
                             message_thread_id: thread_id
@@ -297,7 +296,7 @@ class Bot {
                 } else {
                     const media = video.map((videoPath, index) => ({
                         type: 'video',
-                        media: `https://bot.chatbotique.com.ua/sending-images/${videoPath}`,
+                        media: { source: fs.createReadStream(`./uploads/sending/${videoPath}`) },
                         ...(index === 1 ? {caption: message} : {}),
                     }));
 
