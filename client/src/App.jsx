@@ -36,7 +36,7 @@ function App() {
             element: <ProtectedRoute element={<Main><HashTagsPage/></Main>}/>,
         },
         {
-            link: '/usersending',
+            link: '/bot/:id/mailing',
             element: <ProtectedRoute element={<Main><Sending/></Main>}/>,
         },
         {

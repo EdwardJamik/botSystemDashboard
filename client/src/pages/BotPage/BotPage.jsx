@@ -140,6 +140,7 @@ const BotPage = () => {
                             marginRight: 10
                         }}
                         variant="outlined"
+                        href={`/bot/${isBotData?._id}/mailing`}
                     >
                         Розсилка
                     </Button>
