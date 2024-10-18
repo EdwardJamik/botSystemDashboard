@@ -3,6 +3,8 @@ const { message } = require("telegraf/filters");
 const BotModel = require('../models/bot.model');
 const BotGroupModel = require('../models/group.model');
 const BotHashTagsModel = require('../models/hashtag.model');
+const Sending = require('../models/sending.model')
+const fs = require("fs");
 class Bot {
     constructor(token) {
         this.token = token;
@@ -242,10 +244,91 @@ class Bot {
         }
     }
 
+    async sendingGroup(id, chat_id, thread_id, message, image, video) {
+        try {
+            await Sending.updateOne({_id: id}, {accepting_telegram: true});
+
+            if (message && image !== null && image?.length && image !== '') {
+                if (image?.length === 1) {
+                    const photoPath = `./uploads/sending/${image[0]}`;
+
+                    try {
+                        await this.bot.telegram.sendPhoto(chat_id, { source: fs.createReadStream(photoPath) }, {
+                            caption: message,
+                            parse_mode: 'Markdown',
+                            message_thread_id: thread_id
+                        });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                } else {
+                    const media = image.map((photoPath) => ({
+                        type: 'photo',
+                        media: { source: fs.createReadStream(`./uploads/sending/${photoPath}`) },
+                    }));
+
+                    try {
+                        await this.bot.telegram.sendMediaGroup(chat_id, media, {
+                            parse_mode: 'Markdown',
+                            message_thread_id:thread_id
+                        }).then(async () => {
+                            await this.bot.telegram.sendMessage(chat_id, message, {
+                                parse_mode: 'Markdown',
+                                message_thread_id:thread_id
+                            });
+                        });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            } else if (message && video !== null && video?.length && video !== '') {
+                if (video?.length === 1) {
+                    const videoPath = `./uploads/sending/${video}`;
+                    try {
+
+                        await this.bot.telegram.sendVideo(chat_id, { source: fs.createReadStream(videoPath) }, {
+                            caption: message,
+                            parse_mode: 'Markdown',
+                            message_thread_id: thread_id
+                        });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                } else {
+                    const media = video.map((videoPath, index) => ({
+                        type: 'video',
+                        media: { source: fs.createReadStream(`./uploads/sending/${videoPath}`) },
+                        ...(index === 1 ? {caption: message} : {}),
+                    }));
+
+                    try {
+                        await this.bot.telegram.sendMediaGroup(chat_id, media, {
+                            parse_mode: 'Markdown',
+                            message_thread_id: thread_id
+                        });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            } else {
+                try {
+                    await this.bot.telegram.sendMessage(chat_id, message, {
+                        parse_mode: 'Markdown',
+                        message_thread_id: thread_id
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     async launch() {
         try {
             const initialized = await this.init();
-            console.log(initialized)
+
             if (!initialized) {
                 console.log(`Не вдалося ініціалізувати бота з токеном: ${this.token.slice(0, 10)}...`);
                 await BotModel.updateOne(

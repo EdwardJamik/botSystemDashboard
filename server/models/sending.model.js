@@ -7,6 +7,13 @@ const SendingList = new mongoose.Schema({
     content:{
         type: String,
     },
+    bot_id:{
+        type: String,
+    },
+    group:{
+        type: Array,
+        default: null
+    },
     image:{
         type: Array,
         default: null
@@ -15,45 +22,9 @@ const SendingList = new mongoose.Schema({
         type: Array,
         default: null
     },
-    viber:{
-        type: Boolean,
-        default:false,
-    },
-    telegram:{
-        type: Boolean,
-        default:false,
-    },
-    un_sending_viber:{
-        type: String,
-    },
-    sending_viber:{
-        type: String,
-    },
-    un_sending_telegram:{
-        type: String,
-    },
-    sending_telegram:{
-        type: String,
-    },
-    accepting_viber:{
-        type: Boolean,
-        default:false
-    },
     accepting_telegram:{
         type: Boolean,
         default:false
-    },
-    sending_users:{
-        type: Array,
-    },
-    type:{
-        type: Array,
-    },
-    type_sendings:{
-        type: String,
-    },
-    store_link:{
-        type: String,
     },
     createdAt: {
         type: Date,

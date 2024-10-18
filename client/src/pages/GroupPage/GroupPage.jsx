@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {Breadcrumb, Button, Col, ConfigProvider, Input, Row, Statistic, Table, Tabs, Tag} from "antd";
+import {Breadcrumb, Button, Col, ConfigProvider, Input, Row, Statistic, Table, Tabs} from "antd";
 import {DeleteOutlined, HomeOutlined, RobotOutlined, SearchOutlined, UserOutlined} from "@ant-design/icons";
 import {useLocation} from "react-router-dom";
 import axios from "axios";

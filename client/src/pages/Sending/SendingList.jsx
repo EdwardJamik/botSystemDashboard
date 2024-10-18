@@ -1,18 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import axios from "axios";
 import {url} from "../../Config";
-import {Button, Cascader, DatePicker, Input, message, Select, Spin, Upload} from "antd";
+import {Button, Cascader, DatePicker, message, Spin, Upload} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
-import {EnvironmentOutlined, PhoneOutlined, UploadOutlined} from "@ant-design/icons";
+import {UploadOutlined} from "@ant-design/icons";
 const { SHOW_CHILD } = Cascader;
 
 const SendingList = () => {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false)
-    const [link_error, setLinkError] = useState(false)
-    const [isUsers, setUsers] = useState([]);
-    const {Option} = Select;
+    const [isOption, setOption] = useState([])
 
     const [isDate, setDate] = React.useState('');
 
@@ -22,10 +20,8 @@ const SendingList = () => {
     const [newFileNameVideo, setNewFileNameVideo] = useState([]);
     const [formData, setFormData] = useState({
         text: '',
-        messanger: [],
         date: '',
-        type: [],
-        users: [],
+        group: [],
         video: [],
         photo: [],
     });
@@ -36,70 +32,52 @@ const SendingList = () => {
     };
 
     const resetFormData = () => {
+        setFormData({
+            text: '',
+            date: '',
+            group: [],
+            video: [],
+            photo: [],
+        });
+
         setDate('')
         setNewFileName([])
         setNewFileNameVideo([])
         setFileListVideo([])
         setFileList([])
-        setFormData({
-            text: '',
-            messanger: [],
-            date: '',
-            type: [],
-            users: [],
-            video: [],
-            photo: [],
-        });
+
     };
 
     useEffect(() => {
-        if (formData.messanger.length && formData.type) {
-            async function getUsersList() {
+            async function getGroupList() {
 
-                const sendingData = {
-                    type: formData.type,
-                    messanger: formData.messanger
-                }
+                const pathname = location.pathname;
+                const parts = pathname.split('/');
+                const bot_id = parts[parts.length - 2];
 
-                const {data} = await axios.post(`${url}/api/v1/admin/sendingsUserList/`, sendingData, {withCredentials: true});
+                const {data} = await axios.post(`${url}/api/v1/admin/sendingsGroupList/`, {bot_id}, {withCredentials: true});
 
-                setUsers([{value:'All', label:'Всі'},...data.data])
+                setOption([...data])
 
                 return true;
             }
 
-            getUsersList()
-        }
-    }, [formData.messanger, formData.type]);
+            getGroupList()
+    }, []);
 
-    const handleInputChange = (e) => {
-        const {name, value} = e.target;
-
-        // if(name === 'store_link'){
-        //     const httpsLinkRegex = /^https:\/\/[^\s/$.?#].[^\s]*$/;
-        //
-        //     if(httpsLinkRegex.test(value)){
-        //         setLinkError(false)
-        //         setFormData({
-        //             ...formData,
-        //             [name]: value,
-        //         });
-        //     } else{
-        //         setLinkError(true)
-        //         setFormData({
-        //             ...formData,
-        //             [name]: value,
-        //         });
-        //     }
-        //
-        // } else{
+    const handleInputChange = (e, value) => {
+        if(e === 'group'){
+            setFormData({
+                ...formData,
+                ['group']: value,
+            });
+        } else {
+            const {name, value} = e.target;
             setFormData({
                 ...formData,
                 [name]: value,
             });
-        // }
-
-
+        }
     };
 
     const disabledDate = (current) => {
@@ -214,18 +192,19 @@ const SendingList = () => {
 
     const handleUpload = async () => {
         try {
-            let videoName, imageName;
+            const pathname = location.pathname;
+            const parts = pathname.split('/');
+            const bot_id = parts[parts.length - 2];
+
             let seminarData = {
                 ...formData,
+                bot_id: bot_id,
             };
 
-            if ((formData.type).length && (formData.messanger).length && formData.text !== '' && (formData.users).length || formData.text === '' && formData.video.length || formData.text === '' && formData.photo.length) {
+            if (formData.text !== '' && (formData.group).length || formData.text === '' && formData.video.length || formData.text === '' && formData.photo.length) {
 
                 if (formData.photo.length && formData.text !== '' && (formData.text).length <= 768 || formData.video.length && formData.text !== '' && (formData.text).length <= 768 || !formData.video.length && !formData.photo.length && formData.text !== '') {
 
-                    const httpsLinkRegex = /^https:\/\/[^\s/$.?#].[^\s]*$/;
-
-                    // if(httpsLinkRegex.test(formData.store_link)) {
                         const createSeminarResponse = await axios.post(`${url}/api/v1/admin/createSending/`, seminarData, {withCredentials: true});
 
                         if (createSeminarResponse) {
@@ -234,22 +213,16 @@ const SendingList = () => {
                             resetFormData()
                             showModal()
                         }
-                    // } else{
-                    //     message.warning('Невірний формат посилання, приклад посилання: "https://elfori.com/sales"')
-                    // }
+
                 } else {
                     setLoading(false)
                     message.warning('Розсилка з фото/відео повинен містити не більше 768 символів')
                 }
 
             } else {
-                if (!(formData.type).length) {
-                    message.warning('Вкажіть тип акаунту для розсилки')
-                } else if (!(formData.messanger).length) {
-                    message.warning('Вкажіть тип месенджеру для розсилки')
-                } else if (formData.text === '' && formData.photo === null && formData.video === null) {
+                if (formData.text === '' && formData.photo === null && formData.video === null) {
                     message.warning('Заповніть текст, фото або відео для розсилки')
-                } else if (!(formData.users).length) {
+                } else if (formData.group.length) {
                     message.warning('Оберіть користувачів для яких виконується розсилка')
                 }
             }
@@ -263,40 +236,6 @@ const SendingList = () => {
         console.log(value);
     };
 
-    const options = [
-        {
-            label: 'Light',
-            value: 'light',
-            children: new Array(20).fill(null).map((_, index) => ({
-                label: `Number ${index}`,
-                value: index,
-            })),
-        },
-        {
-            label: 'Bamboo',
-            value: 'bamboo',
-            children: [
-                {
-                    label: 'Little',
-                    value: 'little',
-                    children: [
-                        {
-                            label: 'Toy Fish',
-                            value: 'fish',
-                        },
-                        {
-                            label: 'Toy Cards',
-                            value: 'cards',
-                        },
-                        {
-                            label: 'Toy Bird',
-                            value: 'bird',
-                        },
-                    ],
-                },
-            ],
-        },
-    ];
 
     return (
         <div className='modal_sendings_forms'>
@@ -368,11 +307,13 @@ const SendingList = () => {
                         style={{
                             width: '100%',
                         }}
-                        options={options}
-                        onChange={handleChange}
+                        options={isOption}
+                        name="group"
+                        onChange={(value)=>handleInputChange('group', value)}
                         multiple
                         maxTagCount="responsive"
                         showCheckedStrategy={SHOW_CHILD}
+                        value={formData.group}
                     />
                 </div>
                 <Button key="saved" type="primary" onClick={() => handleUpload()}>

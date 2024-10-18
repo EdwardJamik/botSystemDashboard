@@ -174,70 +174,28 @@ const SendingListReport = () => {
 
     const columns = [
         {
-            title: 'Месенджер',
-            key: 'operation',
-            width: '15%',
-            render: (record) => (
-                <>
-                    {record.telegram && record.viber && ` Viber, Telegram`}
-                    {record.telegram && !record.viber && `Telegram`}
-                    {record.viber && !record.telegram && `Viber`}
-                </>
-            ),
-        },
-        {
-            title: 'Користувачі на момент розсилки',
-            key: 'operation',
-            width: '20%',
-            render: (record) => (
-                <>
-                    {record.un_sending_telegram && record.un_sending_viber && `Telegram: ${record.un_sending_telegram} | Viber: ${record.un_sending_viber}`}
-                    {record.un_sending_telegram && !record.un_sending_viber && `Telegram: ${record.un_sending_telegram}`}
-                    {record.un_sending_viber && !record.un_sending_telegram && `Viber: ${record.un_sending_viber}`}
-                </>
-            ),
-        },
-        {
-            title: 'Надійшло',
-            key: 'operation',
-            width: '20%',
-            render: (record) => (
-                <>
-                    {record.sending_telegram && record.sending_viber && `Telegram: ${record.sending_telegram} | Viber: ${record.sending_viber}`}
-                    {record.sending_telegram && !record.sending_viber && `Telegram: ${record.sending_telegram}`}
-                    {record.sending_viber && !record.sending_telegram && `Viber: ${record.sending_viber}`}
-                </>
-            ),
-        },
-        {
-            title: 'Тип розсилки',
-            dataIndex: 'type_sendings',
-            key: 'type_sendings',
-            width: '10%',
-        },
-        {
             title: 'Створено',
             dataIndex: 'createdAt',
             key: 'createdAt',
-            width: '10%',
+            width: '33%',
         },
         {
             title: 'Заплановано на',
             dataIndex: 'date',
             key: 'date',
-            width: '10%',
+            width: '33%',
         },
         {
-            title: 'Закінчено',
+            title: 'Надіслано',
             dataIndex: 'updatedAt',
             key: 'updatedAt',
-            width: '10%',
+            width: '33%',
         },
         {
             title: '',
             key: 'operation',
             fixed: 'right',
-            width: 10,
+            width: '33%',
             render: (record) => (
                 <>
                     <div className="seminar_buttons">
@@ -253,53 +211,23 @@ const SendingListReport = () => {
             title: 'Заплановано на',
             dataIndex: 'date',
             key: 'date',
-            width: '25%',
-        },
-        {
-            title: 'Месенджер',
-            key: 'operation',
-            width: '15%',
-            render: (record) => (
-                <>
-                    {record.telegram && record.viber && ` Viber, Telegram`}
-                    {record.telegram && !record.viber && `Telegram`}
-                    {record.viber && !record.telegram && `Viber`}
-                </>
-            ),
-        },
-        {
-            title: 'Користувачі на момент створення розсилки',
-            key: 'operation',
-            width: '25%',
-            render: (record) => (
-                <>
-                    {record.un_sending_telegram && record.un_sending_viber && `Telegram: ${record.un_sending_telegram} | Viber: ${record.un_sending_viber}`}
-                    {record.un_sending_telegram && !record.un_sending_viber && `Telegram: ${record.un_sending_telegram}`}
-                    {record.un_sending_viber && !record.un_sending_telegram && `Viber: ${record.un_sending_viber}`}
-                </>
-            ),
-        },
-        {
-            title: 'Тип розсилки',
-            dataIndex: 'type_sendings',
-            key: 'type_sendings',
-            width: '10%',
+            width: '33%',
         },
         {
             title: 'Створено',
             dataIndex: 'createdAt',
             key: 'createdAt',
-            width: '10%',
+            width: '33%',
         },
         {
             title: '',
             key: 'operation',
             fixed: 'right',
-            width: 10,
+            width: '33%',
             render: (record) => (
                 <>
                     <div className="seminar_buttons">
-                        <Button onClick={()=>{sendingsView(record)}}>Детальніше</Button>
+                        <Button style={{marginRight:'10px'}} onClick={()=>{sendingsView(record)}}>Детальніше</Button>
                         <Button onClick={()=>{sendingsDeleted(record._id)}}>Видалити</Button>
                     </div>
                 </>
@@ -326,51 +254,11 @@ const SendingListReport = () => {
             >
                 <form className="modal_sendings">
                     <div>
-                        <p>Дата розсилки:</p>
-                        {formData.date && `${formData.date}`}
-                    </div>
-                    <div>
-                        <p>Месенджери розсилки:</p>
-                        {formData.viber && formData.telegram &&'Telegram, Viber'}
-                        {formData.telegram && !formData.viber && 'Telegram'}
-                        {!formData.telegram && formData.viber && 'Viber'}
-                    </div>
-                    {formData.accepting_viber || formData.accepting_telegram ?
-                    <div>
-                        <p>Розсилку виконано для:</p>
-                        {formData.accepting_viber && formData.accepting_telegram &&'Telegram, Viber'}
-                        {formData.accepting_telegram && !formData.accepting_viber && 'Telegram'}
-                        {!formData.accepting_telegram && formData.accepting_viber && 'Viber'}
-                    </div>
-                    :
-                        <></>
-                    }
-                    <div>
-                        <p>Категорія акаунтів:</p>
-                        {formData.type && `${formData.type}`}
-                    </div>
-                    <div>
-                        <p>Зареєстрованих користувачів до розсилки:</p>
-                        {formData.un_sending_viber && formData.un_sending_telegram &&`Telegram: ${formData.un_sending_telegram} Viber: ${formData.un_sending_viber}`}
-                        {formData.un_sending_viber && !formData.un_sending_telegram &&`Viber: ${formData.un_sending_viber}`}
-                        {!formData.un_sending_viber && formData.un_sending_telegram &&`Telegram: ${formData.un_sending_telegram}`}
-                    </div>
-                    {formData.sending_telegram || formData.sending_viber ?
-                    <div>
-                        <p>Надіслано користувачам:</p>
-                        {formData.sending_viber && formData.sending_telegram &&`Telegram: ${formData.sending_telegram} Viber: ${formData.sending_viber}`}
-                        {formData.sending_viber && !formData.sending_telegram &&`Viber: ${formData.sending_viber}`}
-                        {!formData.sending_viber && formData.sending_telegram &&`Telegram: ${formData.sending_telegram}`}
-                    </div>
-                        :
-                        <></>
-                    }
-                    <div>
                         <p>Розсилку створено:</p>
                         {formData.createdAt && ` ${formData.createdAt}`}
                     </div>
                     <div>
-                        <p>Розсилку закінчено:</p>
+                        <p>Розсилку виконано:</p>
                         {formData.updatedAt && ` ${formData.updatedAt}`}
                     </div>
 
