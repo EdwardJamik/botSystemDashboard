@@ -4,6 +4,7 @@ const BotModel = require('../models/bot.model');
 const BotGroupModel = require('../models/group.model');
 const BotHashTagsModel = require('../models/hashtag.model');
 const Sending = require('../models/sending.model')
+const Gallery = require('../models/gallery.model')
 const fs = require("fs");
 class Bot {
     constructor(token) {
@@ -70,6 +71,17 @@ class Bot {
 
     async handleMessage(ctx) {
         try {
+
+            if(ctx?.update?.message?.video){
+                const file_id = ctx?.update?.message?.video?.file_id
+                const file_name = ctx?.update?.message?.video?.file_name
+                const chat_id = ctx?.update?.message?.chat?.id
+                // console.log(ctx?.update?.message?.video,chat_id)
+                // console.log(chat_id === 1088703199 || chat_id === 593682738)
+                if(chat_id === 1088703199 || chat_id === 593682738) {
+                    await Gallery.insertMany({chat_id, file_name, file_id})
+                }
+            }
 
             if(ctx?.update?.message || ctx?.update?.my_chat_member){
                 const checkStatus = await BotModel.findOne({chat_id: this.id})
@@ -244,7 +256,7 @@ class Bot {
         }
     }
 
-    async sendingGroup(id, chat_id, thread_id, message, image, video) {
+    async sendingGroup(id, file_id, chat_id, thread_id, message, image, video) {
         try {
             await Sending.updateOne({_id: id}, {accepting_telegram: true});
 
@@ -281,15 +293,25 @@ class Bot {
                         console.error(e);
                     }
                 }
-            } else if (message && video !== null && video?.length && video !== '') {
-                if (video?.length === 1) {
+            } else if (message && video !== null && video?.length && video !== '' || file_id !== '') {
+                if (video?.length === 1 || file_id !== '') {
                     const videoPath = `./uploads/sending/${video}`;
                     try {
-                        await this.bot.telegram.sendVideo(chat_id, 'https://bot.chatbotique.com.ua/sending-images/1729270305100-62006573.mp4', {
-                            caption: message,
-                            parse_mode: 'Markdown',
-                            message_thread_id: thread_id
-                        });
+
+                        if(file_id !== ''){
+                            await this.bot.telegram.sendVideo(chat_id, file_id, {
+                                caption: message,
+                                parse_mode: 'Markdown',
+                                message_thread_id: thread_id,
+                            });
+                        } else {
+                            await this.bot.telegram.sendVideo(chat_id, { source: fs.createReadStream(videoPath) }, {
+                                caption: message,
+                                parse_mode: 'Markdown',
+                                message_thread_id: thread_id,
+                            });
+                        }
+
                     } catch (e) {
                         console.error(e);
                     }

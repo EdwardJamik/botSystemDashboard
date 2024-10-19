@@ -7,6 +7,7 @@ const Sending = require("../models/sending.model")
 const BotsList = require("../models/bot.model")
 const BotsGroup = require("../models/group.model")
 const BotHashTags = require("../models/hashtag.model")
+const Gallery = require("../models/gallery.model")
 
 const auth = require("./Middlewares/auth.js");
 const dayjs = require("dayjs");
@@ -150,7 +151,7 @@ cron.schedule('* * * * *', async () => {
                 const bot = new Bot(findBot?.token);
 
                 for(const currentGroup of insertedData?.group){
-                    await bot.sendingGroup(String(insertedData?._id),currentGroup[0],currentGroup[1],insertedData?.content,insertedData?.image,insertedData?.watch)
+                    await bot.sendingGroup(String(insertedData?._id), insertedData?.file_id,currentGroup[0],currentGroup[1],insertedData?.content,insertedData?.image,insertedData?.watch)
                 }
             }
         }
@@ -161,21 +162,21 @@ cron.schedule('* * * * *', async () => {
 
 router.post("/createSending",  async (req, res) => {
     try {
-        const {text, group, bot_id, date, video, photo} = req.body
+        const {text, group, bot_id, date, video, photo, file_id} = req.body
 
-        if(text && group || video && group || photo && group){
+        if(text && group || video && group || photo && group || file_id && group){
 
             if(date === 'Invalid Date' || date === null || date === undefined || date === ''){
                 const findBot = await BotsList.findOne({_id: bot_id})
                 const bot = new Bot(findBot?.token);
 
-                const insertedData = await Sending.insertMany({bot_id, group, content:text, image:photo, watch: video})
+                const insertedData = await Sending.insertMany({bot_id, file_id, group, content:text, image:photo, watch: video})
 
                 for(const currentGroup of group){
-                    await bot.sendingGroup(String(insertedData[0]?._id),currentGroup[0],currentGroup[1],text,photo,video)
+                    await bot.sendingGroup(String(insertedData[0]?._id),file_id,currentGroup[0],currentGroup[1],text,photo,video)
                 }
             } else {
-                const insertedData = await Sending.insertMany({date:date, content:text, bot_id, group, image:photo, watch: video })
+                const insertedData = await Sending.insertMany({date:date, file_id, content:text, bot_id, group, image:photo, watch: video })
             }
         }
         res.json(true);
@@ -372,7 +373,18 @@ router.post("/sendingsGroupList",  async (req, res) => {
             });
         });
 
-            return res.json([result]);
+        const galleryList = await Gallery.find({});
+
+        let galleryArray = []
+
+        galleryList.forEach(child => {
+            galleryArray.push({
+                label: child.file_name,
+                value: child.file_id
+            });
+        });
+
+            res.json({thread: [result], gallery: galleryArray});
     } catch (err) {
         console.error(err);
         res.status(500).send();

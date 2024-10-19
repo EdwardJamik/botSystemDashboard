@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import axios from "axios";
 import {url} from "../../Config";
-import {Button, Cascader, DatePicker, message, Spin, Upload} from "antd";
+import {Button, Cascader, DatePicker, message, Select, Spin, Upload} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import {UploadOutlined} from "@ant-design/icons";
@@ -13,6 +13,7 @@ const SendingList = () => {
     const [isOption, setOption] = useState([])
 
     const [isDate, setDate] = React.useState('');
+    const [isGallery, setGallery] = React.useState([]);
 
     const [fileList, setFileList] = React.useState([]);
     const [fileListVideo, setFileListVideo] = React.useState([]);
@@ -22,6 +23,7 @@ const SendingList = () => {
         text: '',
         date: '',
         group: [],
+        file_id: [],
         video: [],
         photo: [],
     });
@@ -36,6 +38,7 @@ const SendingList = () => {
             text: '',
             date: '',
             group: [],
+            file_id: [],
             video: [],
             photo: [],
         });
@@ -57,7 +60,8 @@ const SendingList = () => {
 
                 const {data} = await axios.post(`${url}/api/v1/admin/sendingsGroupList/`, {bot_id}, {withCredentials: true});
 
-                setOption([...data])
+                setGallery([...data?.gallery])
+                setOption([...data?.thread])
 
                 return true;
             }
@@ -70,6 +74,11 @@ const SendingList = () => {
             setFormData({
                 ...formData,
                 ['group']: value,
+            });
+        } else if(e === 'file_id'){
+            setFormData({
+                ...formData,
+                ['file_id']: value,
             });
         } else {
             const {name, value} = e.target;
@@ -201,9 +210,9 @@ const SendingList = () => {
                 bot_id: bot_id,
             };
 
-            if (formData.text !== '' && (formData.group).length || formData.text === '' && formData.video.length || formData.text === '' && formData.photo.length) {
+            if (formData.text !== '' && (formData.group).length || formData.text === '' && formData.video.length || formData.text === '' && formData.photo.length || formData.video.length || formData?.file_id?.length && formData?.file_id !== '' ) {
 
-                if (formData.photo.length && formData.text !== '' && (formData.text).length <= 768 || formData.video.length && formData.text !== '' && (formData.text).length <= 768 || !formData.video.length && !formData.photo.length && formData.text !== '') {
+                if (formData.photo.length && formData.text !== '' && (formData.text).length <= 768 || formData.video.length && formData.text !== '' && (formData.text).length <= 768 || !formData.video.length && !formData.photo.length && formData.text !== '' || formData?.file_id?.length && formData?.file_id !== '' && (formData.text).length <= 768) {
 
                         const createSeminarResponse = await axios.post(`${url}/api/v1/admin/createSending/`, seminarData, {withCredentials: true});
 
@@ -271,22 +280,42 @@ const SendingList = () => {
                 </div>
                 {!newFileName.length &&
                     <div>
-                        <p>Відео</p>
-                        <Upload
-                            {...propsVideo}
-                            fileList={fileListVideo}
-                            maxCount={10}
-                            multiple
-                            style={{margin: '0 auto'}}
-                        >
-                            <Button style={{display: 'flex', alignItems: 'center', margin: '0 auto'}}
-                                    icon={<UploadOutlined/>}>Завантажити (Max: 10)</Button>
-                        </Upload>
+                        <p>Відео (завантажте або оберіть із надісланих боту)</p>
+                        <div style={{display:'flex',alignItems:'center'}}>
+                            {!formData?.file_id?.length &&
+                                <div  style={{marginRight:'20px'}}>
+                                    <Upload
+                                        {...propsVideo}
+                                        fileList={fileListVideo}
+                                        maxCount={10}
+                                        multiple
+                                    >
+                                        <Button style={{display: 'flex', alignItems: 'center', margin: '0 auto'}}
+                                                icon={<UploadOutlined/>}>Завантажити (Max: 10)</Button>
+                                    </Upload>
+                                </div>
+
+                            }
+                            {!newFileNameVideo.length &&
+                            <Select
+                                onChange={(value)=> handleInputChange('file_id', value)}
+                                style={{height:'40px', maxWidth:'150px',width:'100%'}}
+                                placeholder="Збережене відео"
+                                value={formData?.file_id}
+                                allowClear
+                                filterOption={(input, option) =>
+                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={isGallery}
+                            />
+                            }
+                        </div>
+
                     </div>
                 }
 
 
-                {!newFileNameVideo.length &&
+                {!newFileNameVideo.length && !formData?.file_id?.length &&
                     <div>
                         <p>Фото</p>
                         <Upload

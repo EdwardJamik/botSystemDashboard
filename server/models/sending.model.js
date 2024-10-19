@@ -10,6 +10,10 @@ const SendingList = new mongoose.Schema({
     bot_id:{
         type: String,
     },
+    file_id:{
+        type: String,
+        default: ''
+    },
     group:{
         type: Array,
         default: null
