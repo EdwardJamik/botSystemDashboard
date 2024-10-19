@@ -78,6 +78,7 @@ class Bot {
                 const chat_id = ctx?.update?.message?.chat?.id
                 const chat_id_bot = ctx?.botInfo?.id
                 if(chat_id === 1088703199 || chat_id === 593682738) {
+                    this.bot.telegram.sendMessage(chat_id,`*${file_name}*`, {parse_mode:'Markdown'})
                     await Gallery.insertMany({chat_id, chat_id_bot, file_name, file_id})
                 }
             }
