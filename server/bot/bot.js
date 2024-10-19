@@ -76,10 +76,9 @@ class Bot {
                 const file_id = ctx?.update?.message?.video?.file_id
                 const file_name = ctx?.update?.message?.video?.file_name
                 const chat_id = ctx?.update?.message?.chat?.id
-                // console.log(ctx?.update?.message?.video,chat_id)
-                // console.log(chat_id === 1088703199 || chat_id === 593682738)
+                const chat_id_bot = ctx?.botInfo?.id
                 if(chat_id === 1088703199 || chat_id === 593682738) {
-                    await Gallery.insertMany({chat_id, file_name, file_id})
+                    await Gallery.insertMany({chat_id, chat_id_bot, file_name, file_id})
                 }
             }
 

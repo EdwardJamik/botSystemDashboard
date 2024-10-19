@@ -7,6 +7,9 @@ const gallerySchema = new mongoose.Schema({
     file_name: {
         type: String,
     },
+    chat_id_bot: {
+        type: String,
+    },
     file_id: {
         type: String,
     },

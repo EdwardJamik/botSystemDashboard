@@ -344,10 +344,10 @@ router.post("/sendingsGroupList",  async (req, res) => {
     try {
         const {bot_id} = req.body
 
-            const currentBot = await BotsList.findOne({_id: bot_id})
-            const groupList = await BotsGroup.find({
-                chat_id_bot: currentBot?.chat_id
-            });
+        const currentBot = await BotsList.findOne({_id: bot_id})
+        const groupList = await BotsGroup.find({
+            chat_id_bot: currentBot?.chat_id
+        });
 
         const mainThread = groupList.find(item => item.thread_id === 'main');
 
@@ -373,7 +373,7 @@ router.post("/sendingsGroupList",  async (req, res) => {
             });
         });
 
-        const galleryList = await Gallery.find({});
+        const galleryList = await Gallery.find({chat_id_bot: currentBot?.chat_id});
 
         let galleryArray = []
 
@@ -384,7 +384,7 @@ router.post("/sendingsGroupList",  async (req, res) => {
             });
         });
 
-            res.json({thread: [result], gallery: galleryArray});
+        res.json({thread: [result], gallery: galleryArray});
     } catch (err) {
         console.error(err);
         res.status(500).send();
