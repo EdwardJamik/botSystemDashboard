@@ -156,8 +156,13 @@ const BotPage = () => {
     const changeGroup = async (value) => {
         setActiveKey(value);
         if(value !== 'all'){
+            const pathname = location.pathname;
+            const parts = pathname.split('/');
+            const botId = parts[parts.length - 2];
+            const chatId = parts[parts.length - 1];
+
             const {data} = await axios.post(
-                `${url}/api/v1/admin/getGroupTags`, {id:value}, {withCredentials: true}
+                `${url}/api/v1/admin/getGroupTags`, {id:value, group_id: chatId}, {withCredentials: true}
             );
 
 

@@ -500,8 +500,7 @@ router.post("/getBotData",  async (req, res) => {
 
 router.post("/getGroupTags",  async (req, res) => {
     try {
-        const { id } = req.body;
-        const Bot = require('../bot/bot');
+        const { id, group_id } = req.body;
 
         const user_token = req.cookies.token;
         if (!user_token) return res.json(false);
@@ -518,6 +517,7 @@ router.post("/getGroupTags",  async (req, res) => {
                 const pipeline = [
                     {
                         $match:{
+                            chat_id: group_id,
                             thread_id: botGroup?.thread_id,
                         }
                     },
@@ -584,6 +584,11 @@ router.post("/deleteHashtag",  async (req, res) => {
 
                 if(activeKey === 'all'){
                     const pipeline = [
+                        {
+                            $match:{
+                                chat_id: group_id
+                            }
+                        },
                         {
                             $group: {
                                 _id: "$hashtag",
@@ -764,8 +769,7 @@ router.post("/getHashData",  async (req, res) => {
 
 router.post("/getGroupData",  async (req, res) => {
     try {
-        const { group_id,bot_id } = req.body;
-
+        const { group_id, bot_id } = req.body;
         const user_token = req.cookies.token;
         if (!user_token) return res.json(false);
 
@@ -782,6 +786,11 @@ router.post("/getGroupData",  async (req, res) => {
                 const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
 
                 const pipeline = [
+                    {
+                        $match: {
+                            chat_id: group_id
+                        }
+                    },
                     {
                         $group: {
                             _id: "$hashtag",
