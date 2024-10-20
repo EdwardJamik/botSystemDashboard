@@ -293,12 +293,12 @@ class Bot {
                         console.error(e);
                     }
                 }
-            } else if (message && video !== null && video?.length && video !== '' || file_id !== '') {
+            } else if (message && video !== null && video?.length && video !== '' || file_id && file_id?.length && file_id !== '') {
                 if (video?.length === 1 || file_id !== '') {
                     const videoPath = `./uploads/sending/${video}`;
                     try {
 
-                        if(file_id !== ''){
+                        if(file_id && file_id?.length && file_id !== ''){
                             await this.bot.telegram.sendVideo(chat_id, file_id, {
                                 caption: message,
                                 parse_mode: 'Markdown',

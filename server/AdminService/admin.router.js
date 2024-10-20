@@ -170,13 +170,13 @@ router.post("/createSending",  async (req, res) => {
                 const findBot = await BotsList.findOne({_id: bot_id})
                 const bot = new Bot(findBot?.token);
 
-                const insertedData = await Sending.insertMany({bot_id, file_id, group, content:text, image:photo, watch: video})
+                const insertedData = await Sending.insertMany({bot_id, file_id: file_id?.length ? file_id : '', group, content:text, image:photo, watch: video})
 
                 for(const currentGroup of group){
                     await bot.sendingGroup(String(insertedData[0]?._id),file_id,currentGroup[0],currentGroup[1],text,photo,video)
                 }
             } else {
-                const insertedData = await Sending.insertMany({date:date, file_id, content:text, bot_id, group, image:photo, watch: video })
+                const insertedData = await Sending.insertMany({date:date, file_id: file_id?.length ? file_id : '', content:text, bot_id, group, image:photo, watch: video })
             }
         }
         res.json(true);
