@@ -725,7 +725,8 @@ router.post("/getHashData",  async (req, res) => {
                         $group: {
                             _id: {
                                 thread_id: "$thread_id",
-                                hashtag: "$hashtag"
+                                hashtag: "$hashtag",
+                                chat_id_user: "$chat_id_user"
                             },
                             count: { $sum: 1 },
                             chat_id: { $first: "$chat_id" },
