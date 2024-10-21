@@ -344,34 +344,37 @@ router.post("/sendingsGroupList",  async (req, res) => {
     try {
         const {bot_id} = req.body
 
-        const currentBot = await BotsList.findOne({_id: bot_id})
+        const currentBot = await BotsList.findOne({ _id: bot_id });
         const groupList = await BotsGroup.find({
             chat_id_bot: currentBot?.chat_id
-        });
+        }).sort({ chat_id: 1 }); // Сортуємо за chat_id
 
-        const mainThread = groupList.find(item => item.thread_id === 'main');
+        const mainGroups = groupList.filter(item => item.thread_id === 'main');
+        const result = [];
 
-        if (!mainThread) {
-            return null;
-        }
+        for (const mainGroup of mainGroups) {
+            const groupResult = {
+                label: mainGroup.name,
+                value: mainGroup.chat_id,
+                children: [{
+                    label: mainGroup.name,
+                    value: 'main',
+                }]
+            };
 
-        const result = {
-            label: mainThread.name,
-            value: mainThread.chat_id,
-            children: [{
-                label: mainThread.name,
-                value: 'main',
-            }]
-        };
+            const children = groupList.filter(item =>
+                item.thread_id !== 'main' && item.chat_id === mainGroup.chat_id
+            ).sort((a, b) => a.name.localeCompare(b.name)); // Сортуємо підгрупи за назвою
 
-        const children = groupList.filter(item => item.thread_id !== 'main');
-
-        children.forEach(child => {
-            result.children.push({
-                label: child.name,
-                value: child.thread_id
+            children.forEach(child => {
+                groupResult.children.push({
+                    label: child.name,
+                    value: child.thread_id
+                });
             });
-        });
+
+            result.push(groupResult);
+        }
 
         const galleryList = await Gallery.find({chat_id_bot: currentBot?.chat_id});
 
@@ -384,7 +387,7 @@ router.post("/sendingsGroupList",  async (req, res) => {
             });
         });
 
-        res.json({thread: [result], gallery: galleryArray});
+        res.json({thread: result, gallery: galleryArray});
     } catch (err) {
         console.error(err);
         res.status(500).send();
