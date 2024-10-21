@@ -731,6 +731,7 @@ router.post("/getHashData",  async (req, res) => {
                             chat_id: { $first: "$chat_id" },
                             chat_id_bot: { $first: "$chat_id_bot" },
                             chat_id_user: { $first: "$chat_id_user" },
+                            username: { $first: "$username" },
                             first_name: { $first: "$first_name" },
                             createdAt: { $min: "$createdAt" },
                             updatedAt: { $max: "$updatedAt" }
