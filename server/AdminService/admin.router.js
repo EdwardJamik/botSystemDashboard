@@ -364,7 +364,12 @@ router.post("/sendingsGroupList",  async (req, res) => {
 
             const children = groupList.filter(item =>
                 item.thread_id !== 'main' && item.chat_id === mainGroup.chat_id
-            ).sort((a, b) => a.name.localeCompare(b.name)); // Сортуємо підгрупи за назвою
+            ).sort((a, b) => {
+                // Перевіряємо, чи існують властивості name перед порівнянням
+                const nameA = (a.name || '').toString();
+                const nameB = (b.name || '').toString();
+                return nameA.localeCompare(nameB);
+            });
 
             children.forEach(child => {
                 groupResult.children.push({
