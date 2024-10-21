@@ -72,6 +72,7 @@ class Bot {
     async handleMessage(ctx) {
         try {
 
+
             if(ctx?.update?.message?.video){
                 const file_id = ctx?.update?.message?.video?.file_id
                 const file_name = ctx?.update?.message?.video?.file_name
@@ -142,10 +143,10 @@ class Bot {
                 } else if(ctx?.update?.message?.message_thread_id && ctx?.update?.message?.is_topic_message){
 
                     const groups = await BotGroupModel.findOne({chat_id: ctx?.update?.message?.chat?.id, thread_id: ctx?.update?.message?.message_thread_id})
-                    if(groups){
 
-                        if(groups?.working && ctx?.update?.message?.text){
-                            const hashtag = parseHashtags(ctx?.update?.message?.text)
+                    if(groups){
+                        if(groups?.working && ctx?.update?.message?.text || groups?.working && ctx?.update?.message?.caption){
+                            const hashtag = ctx?.update?.message?.text ? parseHashtags(ctx?.update?.message?.text) : parseHashtags(ctx?.update?.message?.caption)
                             if(hashtag && hashtag.length)
                                 for (const item of hashtag) {
                                     await BotHashTagsModel.insertMany({
@@ -183,8 +184,8 @@ class Bot {
                             main: false,
                         })
 
-                        if(ctx?.update?.message?.text){
-                            const hashtag = parseHashtags(ctx?.update?.message?.text)
+                        if(ctx?.update?.message?.text || ctx?.update?.message?.caption){
+                            const hashtag = ctx?.update?.message?.text ? parseHashtags(ctx?.update?.message?.text) : parseHashtags(ctx?.update?.message?.caption)
                             if(hashtag && hashtag.length)
                                 for (const item of hashtag) {
                                     await BotHashTagsModel.insertMany({
@@ -212,8 +213,8 @@ class Bot {
                             main: true,
                         })
 
-                    if(ctx?.update?.message?.text){
-                        const hashtag = parseHashtags(ctx?.update?.message?.text)
+                    if(ctx?.update?.message?.text || ctx?.update?.message?.caption){
+                        const hashtag = ctx?.update?.message?.text ? parseHashtags(ctx?.update?.message?.text) : parseHashtags(ctx?.update?.message?.caption)
                         if(hashtag && hashtag.length)
                             for (const item of hashtag) {
                                 await BotHashTagsModel.insertMany({

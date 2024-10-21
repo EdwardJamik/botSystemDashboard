@@ -582,15 +582,16 @@ router.post("/deleteHashtag",  async (req, res) => {
 
         if(chat_id !== null && chat_id && hashTag !== null && hashTag){
             try{
-                const botGroupCurrent = await BotsGroup.findOne({_id: activeKey})
-                await BotHashTags.deleteMany({hashtag:hashTag,chat_id:group_id, thread_id: botGroupCurrent?.thread_id, chat_id_bot: botGroupCurrent?.chat_id_bot});
-
-                const botData = await BotsList.findOne({chat_id: chat_id});
-                const botGroup = await BotsGroup.find({chat_id: group_id})
-
-                const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
 
                 if(activeKey === 'all'){
+                    const botGroupCurrent = await BotsGroup.findOne({chat_id_bot: chat_id})
+                    await BotHashTags.deleteMany({hashtag:hashTag,chat_id:group_id, chat_id_bot: botGroupCurrent?.chat_id_bot});
+
+                    const botData = await BotsList.findOne({chat_id: chat_id});
+                    const botGroup = await BotsGroup.find({chat_id: group_id})
+
+                    const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+
                     const pipeline = [
                         {
                             $match:{
@@ -618,10 +619,42 @@ router.post("/deleteHashtag",  async (req, res) => {
                         }
                     ];
 
+                    const pipelineAll = [
+                        {
+                            $group: {
+                                _id: "$hashtag",
+                                count: { $sum: 1 },
+                                originalId: { $first: "$_id" },
+                                hashtag: { $first: "$hashtag" },
+                                chat_id: { $first: "$chat_id" },
+                                chat_id_bot: { $first: "$chat_id_bot" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: "$originalId",
+                                hashtag: "$_id",
+                                chat_id: 1,
+                                chat_id_bot: 1,
+                                count: 1
+                            }
+                        }
+                    ];
+
+                    const botAllHashTags = await BotHashTags.aggregate(pipelineAll);
+
                     const botHashTags = await BotHashTags.aggregate(pipeline);
 
-                    res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHashTags});
+                    res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHashTags, allHashTags: botAllHashTags});
                 } else {
+                    const botGroupCurrent = await BotsGroup.findOne({_id: activeKey})
+                    await BotHashTags.deleteMany({hashtag:hashTag,chat_id:group_id, thread_id: botGroupCurrent?.thread_id, chat_id_bot: botGroupCurrent?.chat_id_bot});
+
+                    const botData = await BotsList.findOne({chat_id: chat_id});
+                    const botGroup = await BotsGroup.find({chat_id: group_id})
+
+                    const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+
                     const pipeline = [
                         {
                             $match:{

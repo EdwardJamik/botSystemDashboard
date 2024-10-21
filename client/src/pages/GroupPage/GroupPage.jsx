@@ -168,8 +168,12 @@ const BotPage = () => {
 
             setHashTags(data?.hashTags)
         } else {
+            const pathname = location.pathname;
+            const parts = pathname.split('/');
+            const botId = parts[parts.length - 2];
+            const chatId = parts[parts.length - 1];
             const {data} = await axios.post(
-                `${url}/api/v1/admin/getGroupData`, {group_id,bot_id}, {withCredentials: true}
+                `${url}/api/v1/admin/getGroupData`, {group_id: chatId,bot_id:botId}, {withCredentials: true}
             );
             setBotData(data?.botData)
             setBotGroup(data?.botGroup)
