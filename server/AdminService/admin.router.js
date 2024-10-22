@@ -728,7 +728,7 @@ router.post("/deleteHashtag",  async (req, res) => {
 
 router.post("/getHashData",  async (req, res) => {
     try {
-        const { bot_id, group_id, hash_id } = req.body;
+        const { bot_id, group_id, hash_id, type } = req.body;
 
         const user_token = req.cookies.token;
         if (!user_token) return res.json(false);
@@ -745,57 +745,111 @@ router.post("/getHashData",  async (req, res) => {
                 const botGroup = await BotsGroup.find({chat_id: group_id})
                 const botCurrent = await BotsList.findOne({_id:bot_id});
 
-                const pipeline = [
-                    {
-                        $match: {
-                            chat_id: group_id,
-                            chat_id_bot: String(botCurrent?.chat_id),
-                            hashtag: botHash?.hashtag,
-                            thread_id: botHash?.thread_id
+                if(type === 'all'){
+                    const pipeline = [
+                        {
+                            $match: {
+                                chat_id: group_id,
+                                chat_id_bot: String(botCurrent?.chat_id),
+                                hashtag: botHash?.hashtag
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: {
+                                    thread_id: "$thread_id",
+                                    hashtag: "$hashtag",
+                                    chat_id_user: "$chat_id_user"
+                                },
+                                count: { $sum: 1 },
+                                chat_id: { $first: "$chat_id" },
+                                chat_id_bot: { $first: "$chat_id_bot" },
+                                chat_id_user: { $first: "$chat_id_user" },
+                                username: { $first: "$username" },
+                                first_name: { $first: "$first_name" },
+                                createdAt: { $min: "$createdAt" },
+                                updatedAt: { $max: "$updatedAt" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                thread_id: "$_id.thread_id",
+                                hashtag: "$_id.hashtag",
+                                count: 1,
+                                chat_id: 1,
+                                chat_id_bot: 1,
+                                chat_id_user: 1,
+                                username: 1,
+                                first_name: 1,
+                                createdAt: 1,
+                                updatedAt: 1
+                            }
+                        },
+                        {
+                            $sort: { thread_id: 1, count: -1 }
                         }
-                    },
-                    {
-                        $group: {
-                            _id: {
-                                thread_id: "$thread_id",
-                                hashtag: "$hashtag",
-                                chat_id_user: "$chat_id_user"
-                            },
-                            count: { $sum: 1 },
-                            chat_id: { $first: "$chat_id" },
-                            chat_id_bot: { $first: "$chat_id_bot" },
-                            chat_id_user: { $first: "$chat_id_user" },
-                            username: { $first: "$username" },
-                            first_name: { $first: "$first_name" },
-                            createdAt: { $min: "$createdAt" },
-                            updatedAt: { $max: "$updatedAt" }
+                    ];
+
+                    const botHashData = await BotHashTags.aggregate(pipeline)
+
+                    const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+
+                    res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHash, hashTagData:botHashData});
+                } else {
+                    const pipeline = [
+                        {
+                            $match: {
+                                chat_id: group_id,
+                                chat_id_bot: String(botCurrent?.chat_id),
+                                hashtag: botHash?.hashtag,
+                                thread_id: botHash?.thread_id
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: {
+                                    thread_id: "$thread_id",
+                                    hashtag: "$hashtag",
+                                    chat_id_user: "$chat_id_user"
+                                },
+                                count: { $sum: 1 },
+                                chat_id: { $first: "$chat_id" },
+                                chat_id_bot: { $first: "$chat_id_bot" },
+                                chat_id_user: { $first: "$chat_id_user" },
+                                username: { $first: "$username" },
+                                first_name: { $first: "$first_name" },
+                                createdAt: { $min: "$createdAt" },
+                                updatedAt: { $max: "$updatedAt" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                thread_id: "$_id.thread_id",
+                                hashtag: "$_id.hashtag",
+                                count: 1,
+                                chat_id: 1,
+                                chat_id_bot: 1,
+                                chat_id_user: 1,
+                                username: 1,
+                                first_name: 1,
+                                createdAt: 1,
+                                updatedAt: 1
+                            }
+                        },
+                        {
+                            $sort: { thread_id: 1, count: -1 }
                         }
-                    },
-                    {
-                        $project: {
-                            _id: 0,
-                            thread_id: "$_id.thread_id",
-                            hashtag: "$_id.hashtag",
-                            count: 1,
-                            chat_id: 1,
-                            chat_id_bot: 1,
-                            chat_id_user: 1,
-                            username: 1,
-                            first_name: 1,
-                            createdAt: 1,
-                            updatedAt: 1
-                        }
-                    },
-                    {
-                        $sort: { thread_id: 1, count: -1 }
-                    }
-                ];
+                    ];
 
-                const botHashData = await BotHashTags.aggregate(pipeline)
+                    const botHashData = await BotHashTags.aggregate(pipeline)
 
-                const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
+                    const botGroupMain = await BotsGroup.findOne({chat_id: group_id, thread_id:'main'})
 
-                res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHash, hashTagData:botHashData});
+                    res.json({status: true, botData: botData, botGroup: botGroup, groupMain: botGroupMain, hashTags: botHash, hashTagData:botHashData});
+                }
+
             } catch (e){
                 console.error(e)
                 res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});

@@ -36,6 +36,10 @@ function App() {
             element: <ProtectedRoute element={<Main><HashTagsPage/></Main>}/>,
         },
         {
+            link: '/bot/:id/:chat_id/:hash_id/:type',
+            element: <ProtectedRoute element={<Main><HashTagsPage/></Main>}/>,
+        },
+        {
             link: '/bot/:id/mailing',
             element: <ProtectedRoute element={<Main><Sending/></Main>}/>,
         },

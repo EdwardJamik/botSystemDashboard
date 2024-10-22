@@ -56,7 +56,7 @@ const BotPage = () => {
             width: '20%',
             align:'center',
             render: (_, record) => <>
-                <Button style={{fontSize:'12px', marginRight:'10px'}} href={`/bot/${isBotData?._id}/${record?.chat_id}/${record?._id}`}><UserOutlined /></Button>
+                <Button style={{fontSize:'12px', marginRight:'10px'}} href={`/bot/${isBotData?._id}/${record?.chat_id}/${record?._id}${activeKey === 'all' ? '/all' : '/selected' }`}><UserOutlined /></Button>
                 <Button onClick={()=>removeHashTagItem(record?.chat_id,record?.chat_id_bot,record?.hashtag)} style={{fontSize:'12px'}} danger><DeleteOutlined /></Button>
             </>,
         },
@@ -138,7 +138,6 @@ const BotPage = () => {
         setGroupMain(data?.groupMain)
         setHashTags(data?.hashTags)
         setAllHash(data?.hashTags)
-
     }
 
     const removeHashTagItem = async (group_id, chat_id, hashTag) => {

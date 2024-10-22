@@ -118,9 +118,9 @@ const BotPage = () => {
     const navigate = useNavigate();
 
 
-    const getGroupData = async (bot_id, group_id, hash_id) => {
+    const getGroupData = async (bot_id, group_id, hash_id, type) => {
         const {data} = await axios.post(
-            `${url}/api/v1/admin/getHashData`, {bot_id, group_id, hash_id}, {withCredentials: true}
+            `${url}/api/v1/admin/getHashData`, {bot_id, group_id, hash_id, type}, {withCredentials: true}
         );
 
         setBotData(data?.botData)
@@ -133,16 +133,17 @@ const BotPage = () => {
 
         const pathname = location.pathname;
         const parts = pathname.split('/');
-        const botId = parts[parts.length - 3];
-        const chatId = parts[parts.length - 2];
-        const hashId = parts[parts.length - 1];
+        const botId = parts[parts.length - 4];
+        const chatId = parts[parts.length - 3];
+        const hashId = parts[parts.length - 2];
+        const type = parts[parts.length - 1];
 
         const removeTags = await axios.post(
             `${url}/api/v1/admin/deleteUserHashTag`, {group_id: chatId, hash_id: hashId}, {withCredentials: true}
         );
 
         const {data} = await axios.post(
-            `${url}/api/v1/admin/getHashData`, {bot_id:botId, group_id:chatId, hash_id:hashId}, {withCredentials: true}
+            `${url}/api/v1/admin/getHashData`, {bot_id:botId, group_id:chatId, hash_id:hashId, type}, {withCredentials: true}
         );
 
         setBotData(data?.botData)
@@ -154,11 +155,12 @@ const BotPage = () => {
     useEffect(() => {
         const pathname = location.pathname;
         const parts = pathname.split('/');
-        const botId = parts[parts.length - 3];
-        const chatId = parts[parts.length - 2];
-        const hashId = parts[parts.length - 1];
+        const botId = parts[parts.length - 4];
+        const chatId = parts[parts.length - 3];
+        const hashId = parts[parts.length - 2];
+        const type = parts[parts.length - 1];
 
-        getGroupData(botId,chatId,hashId)
+        getGroupData(botId,chatId,hashId,type)
     }, []);
 
     return (
