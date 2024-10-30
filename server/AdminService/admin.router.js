@@ -757,10 +757,11 @@ router.post("/getHashData",  async (req, res) => {
                         {
                             $group: {
                                 _id: {
-                                    thread_id: "$thread_id",
+                                    // thread_id: "$thread_id",
                                     hashtag: "$hashtag",
                                     chat_id_user: "$chat_id_user"
                                 },
+                                id: { $first: "$_id" },
                                 count: { $sum: 1 },
                                 chat_id: { $first: "$chat_id" },
                                 chat_id_bot: { $first: "$chat_id_bot" },
@@ -773,7 +774,7 @@ router.post("/getHashData",  async (req, res) => {
                         },
                         {
                             $project: {
-                                _id: 0,
+                                _id: "$id",
                                 thread_id: "$_id.thread_id",
                                 hashtag: "$_id.hashtag",
                                 count: 1,
@@ -809,10 +810,12 @@ router.post("/getHashData",  async (req, res) => {
                         {
                             $group: {
                                 _id: {
+                                    // id: "$_id",
                                     thread_id: "$thread_id",
                                     hashtag: "$hashtag",
                                     chat_id_user: "$chat_id_user"
                                 },
+                                id: { $first: "$_id" },
                                 count: { $sum: 1 },
                                 chat_id: { $first: "$chat_id" },
                                 chat_id_bot: { $first: "$chat_id_bot" },
@@ -825,7 +828,7 @@ router.post("/getHashData",  async (req, res) => {
                         },
                         {
                             $project: {
-                                _id: 0,
+                                _id: "$id",
                                 thread_id: "$_id.thread_id",
                                 hashtag: "$_id.hashtag",
                                 count: 1,
@@ -1036,6 +1039,7 @@ router.post("/deleteUserHashTag",  async (req, res) => {
     try {
         const { group_id, hash_id } = req.body;
 
+        console.log(group_id, hash_id)
         const user_token = req.cookies.token;
         if (!user_token) return res.json(false);
 

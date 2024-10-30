@@ -71,7 +71,7 @@ class Bot {
 
     async handleMessage(ctx) {
         try {
-
+            const chat_id = ctx?.update?.message?.chat?.id
 
             if(ctx?.update?.message?.video){
                 const file_id = ctx?.update?.message?.video?.file_id
@@ -84,7 +84,7 @@ class Bot {
                 }
             }
 
-            if(ctx?.update?.message || ctx?.update?.my_chat_member){
+            if(ctx?.update?.message || ctx?.update?.my_chat_member && chat_id !== 1087968824){
                 const checkStatus = await BotModel.findOne({chat_id: this.id})
 
                 if(!checkStatus?.status) return false

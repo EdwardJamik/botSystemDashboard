@@ -122,7 +122,7 @@ const BotPage = () => {
             children: <Col span={24}><Table columns={columns} dataSource={isAllHash} /></Col>,
         },
         ...isBotGroup.map((item) => ({
-            label: item.name,
+            label: <>{item.name} <Button onClick={()=>removeGroupThread(item._id)} danger primary={true} style={{ fontSize:'18px', height: '26px', marginLeft:'10px'}}>×</Button></>,
             key: item._id,
             children: renderTabContent(item.thread_id),
         }))
@@ -150,6 +150,13 @@ const BotPage = () => {
         setGroupMain(data?.groupMain)
         setHashTags(data?.hashTags)
         setAllHash(data?.allHashTags)
+    }
+
+    const removeGroupThread = async (id) =>{
+        console.log(id)
+        // const {data} = await axios.post(
+        //     `${url}/api/v1/admin/deleteHashtag`, {group_id,chat_id,hashTag,activeKey}, {withCredentials: true}
+        // );
     }
 
     const changeGroup = async (value) => {

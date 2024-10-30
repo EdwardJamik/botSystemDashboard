@@ -10,6 +10,14 @@ import { parseISO } from 'date-fns';
 
 const BotPage = () => {
 
+    const [isBotData, setBotData] = useState()
+    const [isBotGroup, setBotGroup] = useState([])
+    const [isGroupMain, setGroupMain] = useState()
+    const [isHashTags, setHashTags] = useState([])
+
+    const location = useLocation();
+    const navigate = useNavigate();
+
     const columns = [
         {
             title: 'First_name',
@@ -76,6 +84,9 @@ const BotPage = () => {
             filterIcon: (filtered) => (
                 <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
             ),
+            render: (_, record) => <>
+               @{record?.username}
+            </>,
         },
         {
             title: 'Кількість',
@@ -85,19 +96,19 @@ const BotPage = () => {
             sorter: (a, b) => a.count - b.count,
             defaultSortOrder: 'descend',
         },
-        {
-            title: 'Час',
-            dataIndex: 'createdAt',
-            width: '25%',
-            align: 'center',
-            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-            defaultSortOrder: 'descend',
-            render: (text) => {
-                const date = parseISO(text);
-                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                return formatInTimeZone(date, userTimeZone, 'dd.MM.yyyy HH:mm:ss');
-            },
-        },
+        // {
+        //     title: 'Час',
+        //     dataIndex: 'createdAt',
+        //     width: '25%',
+        //     align: 'center',
+        //     sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+        //     defaultSortOrder: 'descend',
+        //     render: (text) => {
+        //         const date = parseISO(text);
+        //         const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        //         return formatInTimeZone(date, userTimeZone, 'dd.MM.yyyy HH:mm:ss');
+        //     },
+        // },
         {
             title: '',
             dataIndex: 'chat_id',
@@ -108,15 +119,6 @@ const BotPage = () => {
             </>,
         },
     ];
-
-    const [isBotData, setBotData] = useState()
-    const [isBotGroup, setBotGroup] = useState([])
-    const [isGroupMain, setGroupMain] = useState()
-    const [isHashTags, setHashTags] = useState([])
-
-    const location = useLocation();
-    const navigate = useNavigate();
-
 
     const getGroupData = async (bot_id, group_id, hash_id, type) => {
         const {data} = await axios.post(
@@ -130,7 +132,6 @@ const BotPage = () => {
     }
 
     const removeHashTagItem = async (hashTagId) => {
-
         const pathname = location.pathname;
         const parts = pathname.split('/');
         const botId = parts[parts.length - 4];
@@ -138,18 +139,11 @@ const BotPage = () => {
         const hashId = parts[parts.length - 2];
         const type = parts[parts.length - 1];
 
-        const removeTags = await axios.post(
-            `${url}/api/v1/admin/deleteUserHashTag`, {group_id: chatId, hash_id: hashId}, {withCredentials: true}
-        );
-
         const {data} = await axios.post(
-            `${url}/api/v1/admin/getHashData`, {bot_id:botId, group_id:chatId, hash_id:hashId, type}, {withCredentials: true}
-        );
+            `${url}/api/v1/admin/deleteUserHashTag`, {bot_id:botId, group_id:chatId, hash_id:hashTagId, type}, {withCredentials: true}
+        ).then(()=>{ getGroupData(botId,chatId,hashId,type)});
 
-        setBotData(data?.botData)
-        setBotGroup(data?.hashTagData)
-        setGroupMain(data?.groupMain)
-        setHashTags(data?.hashTags)
+
     }
 
     useEffect(() => {
