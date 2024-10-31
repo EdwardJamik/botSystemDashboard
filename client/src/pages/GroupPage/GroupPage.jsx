@@ -100,13 +100,16 @@ const BotPage = () => {
     const renderTabContent = useCallback((key) => (
         <Col span={24}>
             {key !== 'all' && (
-                <Button
-                    style={{width:'100%', marginBottom:'20px'}}
-                    danger={isBotGroup.find(group => group.thread_id === key)?.working}
-                    onClick={() => disabledPars(key)}
-                >
-                    {isBotGroup.find(group => group.thread_id === key)?.working ? 'Вимкнути парсинг' : 'Ввімкнути парсинг'}
-                </Button>
+                <div style={{display:'flex'}}>
+                    <Button
+                        style={{width:'100%', marginBottom:'20px'}}
+                        danger={isBotGroup.find(group => group.thread_id === key)?.working}
+                        onClick={() => disabledPars(key)}
+                    >
+                        {isBotGroup.find(group => group.thread_id === key)?.working ? 'Вимкнути парсинг' : 'Ввімкнути парсинг'}
+                    </Button>
+                    <Button onClick={()=>removeGroupThread(isBotGroup.find(group => group.thread_id === key)?._id)}  color="danger" variant="filled" style={{ width:'100%',marginLeft:'10px'}}>× Видалити</Button>
+                </div>
             )}
             <Table
                 columns={columns}
@@ -122,7 +125,7 @@ const BotPage = () => {
             children: <Col span={24}><Table columns={columns} dataSource={isAllHash} /></Col>,
         },
         ...isBotGroup.map((item) => ({
-            label: <>{item.name} <Button onClick={()=>removeGroupThread(item._id)} danger primary={true} style={{ fontSize:'18px', height: '26px', marginLeft:'10px'}}>×</Button></>,
+            label: <>{item.name}</>,
             key: item._id,
             children: renderTabContent(item.thread_id),
         }))
@@ -153,10 +156,20 @@ const BotPage = () => {
     }
 
     const removeGroupThread = async (id) =>{
-        console.log(id)
-        // const {data} = await axios.post(
-        //     `${url}/api/v1/admin/deleteHashtag`, {group_id,chat_id,hashTag,activeKey}, {withCredentials: true}
-        // );
+        setActiveKey('all')
+
+        const {data} = await axios.post(
+            `${url}/api/v1/admin/removeGroups`, {id}, {withCredentials: true}
+        );
+
+        if(data?.status){
+            const pathname = location.pathname;
+            const parts = pathname.split('/');
+            const botId = parts[parts.length - 2];
+            const chatId = parts[parts.length - 1];
+            getGroupData(chatId,botId)
+        }
+
     }
 
     const changeGroup = async (value) => {

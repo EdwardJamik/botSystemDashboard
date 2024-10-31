@@ -867,6 +867,42 @@ router.post("/getHashData",  async (req, res) => {
     }
 });
 
+
+router.post("/removeGroups",  async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        const user_token = req.cookies.token;
+        if (!user_token) return res.json(false);
+
+        const adminlog = jwt.verify(user_token, JWT_SECRET);
+        const admin = await Admin.find({_id: adminlog.id });
+
+        if(!admin) return res.json(false);
+
+        if(id !== null && id){
+            try{
+
+                const botGroup = await BotsGroup.findOne({_id: id})
+                await BotsGroup.deleteOne({_id: id})
+                await BotHashTags.deleteMany({chat_id: botGroup?.chat_id, thread_id: botGroup?.thread_id})
+
+                res.json({status: true});
+
+            } catch (e){
+                console.error(e)
+                res.json({status:false,user_message: 'Виникла помилка під час запуску бота'});
+            }
+        } else {
+            res.json({status:false,user_message: 'Бота не знайдено в базі даних'});
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send();
+    }
+});
+
 router.post("/getGroupData",  async (req, res) => {
     try {
         const { group_id, bot_id } = req.body;

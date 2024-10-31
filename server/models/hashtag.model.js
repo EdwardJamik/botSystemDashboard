@@ -7,6 +7,9 @@ const hashtagsSchema = new mongoose.Schema({
     thread_id: {
         type: String,
     },
+    message_id: {
+        type: String,
+    },
     chat_id_bot: {
         type: String,
     },

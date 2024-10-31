@@ -19,7 +19,7 @@ class Bot {
     }
 
     setupEventHandlers() {
-        this.bot.on(message, this.handleMessage.bind(this));
+        this.bot.on("message", this.handleMessage.bind(this));
     }
 
     async init() {
@@ -69,8 +69,11 @@ class Bot {
         }
     }
 
+
     async handleMessage(ctx) {
         try {
+
+            console.log(ctx)
             const chat_id = ctx?.update?.message?.chat?.id
 
             if(ctx?.update?.message?.video){
@@ -84,6 +87,7 @@ class Bot {
                 }
             }
 
+            // console.log(ctx?.update)
             if(ctx?.update?.message || ctx?.update?.my_chat_member && chat_id !== 1087968824){
                 const checkStatus = await BotModel.findOne({chat_id: this.id})
 
@@ -157,6 +161,7 @@ class Bot {
                                         username: ctx?.update?.message?.from?.username,
                                         first_name: ctx?.update?.message?.from?.first_name,
                                         hashtag: item,
+                                        message_id: ctx?.update?.message?.message_id
                                     });
                                 }
                         }
@@ -196,6 +201,7 @@ class Bot {
                                         username: ctx?.update?.message?.from?.username,
                                         first_name: ctx?.update?.message?.from?.first_name,
                                         hashtag: item,
+                                        message_id: ctx?.update?.message?.message_id
                                     });
                                 }
                         }
@@ -225,10 +231,21 @@ class Bot {
                                     username: ctx?.update?.message?.from?.username,
                                     first_name: ctx?.update?.message?.from?.first_name,
                                     hashtag: item,
+                                    message_id: ctx?.update?.message?.message_id
                                 });
                             }
                     }
                 }
+            } else if(ctx?.update?.edited_message  && chat_id !== 1087968824){
+                const hashtag = ctx?.update?.edited_message?.text ? parseHashtags(ctx?.update?.edited_message?.text) : parseHashtags(ctx?.update?.edited_message?.caption)
+                if(hashtag && hashtag.length)
+                    for (const item of hashtag) {
+                        await BotHashTagsModel.updateOne({message_id: ctx?.update?.edited_message?.message_id},{
+                            hashtag: item,
+                            message_id: ctx?.update?.message?.message_id
+                        });
+                    }
+
             }
 
             function parseHashtags(text) {
